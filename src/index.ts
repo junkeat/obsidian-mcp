@@ -2,7 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { searchNotes, readNote, editNote, readCode, addNote } from "./services/markdown.js";
+import { searchNotes, readNote, editNote, addNote } from "./services/markdown.js";
 
 // 1. Initialize the server
 const server = new McpServer({
@@ -83,15 +83,12 @@ server.tool(
   }
 );
 
-server.registerTool(
+server.tool(
   "add_note",
+  "Add a new markdown note with specified content (fails if the file already exists)",
   {
-    title: "Add Note",
-    description: "Add a new markdown note with specified content",
-    inputSchema: z.object({
-      filename: z.string().describe("The exact filename including .md extension"),
-      content: z.string().describe("The full markdown content to save to the file"),
-    }),
+    filename: z.string().describe("The exact filename including .md extension"),
+    content: z.string().describe("The full markdown content to save to the file"),
   },
   async ({ filename, content }) => {
     try {
@@ -115,27 +112,13 @@ server.registerTool(
       };
     }
   }
-)
-
-server.tool(
-  "draft_readme",
-  "Draft a README.md file for a codebase by reading all .ts, .js, and .json files in the specified directory",
-  {
-    codePath: z.string().describe("The path to the codebase directory"),
-  },
-  async ({ codePath }) => {
-    try {
-      const codeContents = await readCode(codePath);
-      return { content: [{ type: "text", text: codeContents }] };
-    }
-    catch (error) {
-      return { content: [{ type: "text", text: `Error reading code: ${error}` }] };
-    }
-  }
 );
 
 // 3. Start the transport to listen for LLM requests
 async function main() {
+  if (!process.env.OBSIDIAN_VAULT_PATH) {
+    throw new Error("OBSIDIAN_VAULT_PATH environment variable is required.");
+  }
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Second Brain MCP Server running on stdio");

@@ -1,13 +1,13 @@
 # second-brain-mcp
 
-An MCP (Model Context Protocol) server, internally named **Second-Brain-Bridge**, that bridges an AI assistant to a local Obsidian-style markdown vault and to a codebase on disk. It exposes tools for searching/reading/editing notes, and for pulling together the source of a codebase (for drafting docs like this one).
+An MCP (Model Context Protocol) server, internally named **Second-Brain-Bridge**, that bridges an AI assistant to a local Obsidian-style markdown vault. It exposes tools for searching, reading, creating, and editing notes.
 
 ## Features
 
-- **Search notes** — find markdown notes in your vault by filename.
+- **Search notes** — recursively find markdown notes in your vault by filename.
 - **Read notes** — retrieve the full contents of a specific note.
+- **Add notes** — create a new markdown note (fails if it already exists).
 - **Edit notes** — create a new note or overwrite an existing one with new content.
-- **Draft README** — recursively collect the contents of a codebase's `.ts`, `.js`, and `.json` files (excluding `.d.ts` and `node_modules`) as raw text, useful as input for an LLM to draft a README.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ The notes tools operate on a vault directory controlled by an environment variab
 OBSIDIAN_VAULT_PATH=/path/to/your/vault
 ```
 
-If unset, it falls back to a placeholder path (`C:/whatever-vault`) and prints a warning — set this before real use.
+This variable is required — the server will fail to start if it is not set.
 
 ## Installation
 
@@ -37,6 +37,14 @@ npm run build
 ```
 
 Compiles TypeScript from `src/` to `build/`, with `build/index.js` as the executable entry point.
+
+## Testing
+
+```bash
+npm test
+```
+
+Builds the project and runs the unit tests using Node's built-in test runner.
 
 ## Usage
 
@@ -65,13 +73,11 @@ Register the server with an MCP-compatible client (e.g. Claude Desktop) by point
 | `search_notes` | Search local markdown notes by filename |
 | `read_note` | Read the full contents of a specific markdown note |
 | `edit_note` | Create a new note or overwrite an existing markdown note with new content |
-| `draft_readme` | Recursively read a codebase directory's `.ts`/`.js`/`.json` files and return their concatenated contents |
+| `add_note` | Add a new markdown note (fails if the file already exists) |
 
 ## Known Limitations
 
 - `search_notes` matches only against filenames (not note content).
-- `draft_readme` returns raw concatenated source rather than a generated README — an LLM client is expected to turn that into an actual draft.
-- `edit_note`'s path-traversal guard checks the resolved path but joins it with `path.join` before normalizing, so a `filename` containing `../` segments should be tested carefully.
 
 ## Tech Stack
 
@@ -82,5 +88,3 @@ Register the server with an MCP-compatible client (e.g. Claude Desktop) by point
 ## License
 
 ISC
-
-# README Generated using the draft_readme function in this repo with Claude
